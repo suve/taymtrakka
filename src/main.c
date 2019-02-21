@@ -16,6 +16,9 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <signal.h>
+#include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
@@ -77,6 +80,16 @@ char *getWindowName(Display *display, Window window) {
 	return (char*)list;
 }
 
+
+static int terminate = 0;
+
+#define UNUSED(x) (void)(x)
+void signalHandler(int signum) {
+	UNUSED(signum);
+
+	terminate = 1;
+}
+
 int main(void) {
 	Display *display = XOpenDisplay(NULL);
 	if(display == NULL) {
@@ -84,8 +97,17 @@ int main(void) {
 		exit(EXIT_FAILURE);
 	}
 
-	Window focused = getActiveWindow(display);
-	printf("Currently focused window: \"%s\"\n", getWindowName(display, focused));
+	struct sigaction action;
+	action.sa_handler = &signalHandler;
+	sigemptyset(&action.sa_mask);
+	action.sa_flags = 0;
+	sigaction(SIGINT, &action, NULL);
+
+	while(!terminate) {
+		Window focused = getActiveWindow(display);
+		printf("Currently focused window: \"%s\"\n", getWindowName(display, focused));
+		sleep(5);
+	}
 
 	XCloseDisplay(display);
 	return 0;
