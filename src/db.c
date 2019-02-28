@@ -30,16 +30,19 @@ int db_init(void) {
 	os_get_db_path(buffer, sizeof(buffer));
 	
 	// TODO: Check the function's exit code for more detailed error info.
-	sqlite3_open_v2(buffer, &datab, SQLITE_OPEN_READONLY, NULL);
-	if(datab != NULL) return 0;
+	int err = sqlite3_open_v2(buffer, &datab, SQLITE_OPEN_READWRITE, NULL);
+	if(err == SQLITE_OK) return 0;
+	
+	sqlite3_close(datab);
+	datab = NULL;
 	
 	char *slash = strrchr(buffer, '/');
 	*slash = '\0';
 	if(os_mkdir(buffer) != 0) return -1;
 	
 	*slash = '/';
-	sqlite3_open_v2(buffer, &datab, SQLITE_OPEN_READONLY | SQLITE_OPEN_CREATE, NULL);
-	return (datab != NULL) ? 0 : -1;
+	err = sqlite3_open_v2(buffer, &datab, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+	return (err == SQLITE_OK) ? 0 : -1;
 }
 
 int db_quit(void) {
