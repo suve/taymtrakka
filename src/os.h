@@ -19,7 +19,9 @@
 
 #include <string.h>
 
-void os_get_db_path(char *const buffer, const size_t buflen);
+size_t os_get_db_path(char *const buffer, const size_t buflen);
+
+int os_mkdir(char *const buffer);
 
 void os_sleep(const int seconds);
 

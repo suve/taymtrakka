@@ -18,15 +18,17 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <errno.h>
+#include <fcntl.h>
 #include <pwd.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-void os_get_db_path(char *const buffer, const size_t buflen) {
+size_t os_get_db_path(char *const buffer, const size_t buflen) {
 	char* datadir = getenv("XDG_DATA_HOME");
 	if(datadir != NULL) {
-		snprintf(buffer, buflen, "%s/%s/%s/%s", datadir, APP_VENDOR, APP_NAME, DBFILE);
-		return;
+		return snprintf(buffer, buflen, "%s/%s/%s/%s", datadir, APP_VENDOR, APP_NAME, DBFILE);
 	}
 	
 	char* home = getenv("HOME");
@@ -35,7 +37,28 @@ void os_get_db_path(char *const buffer, const size_t buflen) {
 		home = user->pw_dir;
 	}
 	
-	snprintf(buffer, buflen, "%s/.local/share/%s/%s/%s", home, APP_VENDOR, APP_NAME, DBFILE);
+	return snprintf(buffer, buflen, "%s/.local/share/%s/%s/%s", home, APP_VENDOR, APP_NAME, DBFILE);
+}
+
+int os_mkdir(char *const buffer) {
+	if(mkdir(buffer, 0700) == 0) return 0;
+	
+	// ENOENT tells us that one of the parent dirs does not exist.
+	// If it's anything other than ENOENT, bail out.
+	if(errno != ENOENT) {
+		perror(APP_NAME ": Failed to create database directory");
+		return -1;
+	}
+	
+	// Find the last dirname separator so we can cut off the last part
+	char *slashpos = strrchr(buffer, '/');
+	if(slashpos == NULL) return -1;
+	
+	*slashpos = '\0';
+	int make_parent = os_mkdir(buffer);
+	*slashpos = '/';
+	
+	return make_parent;
 }
 
 void os_sleep(const int seconds) {
