@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include "db.h"
 #include "wm.h"
 
 #define APP_NAME    "taymtrakka"
@@ -36,6 +37,7 @@ void signalHandler(int signum) {
 
 int main(void) {
 	wm_init();
+	db_init();
 
 	struct sigaction action;
 	action.sa_handler = &signalHandler;
@@ -54,5 +56,6 @@ int main(void) {
 		sleep(5);
 	}
 
+	db_quit();
 	wm_quit();
 }
