@@ -73,7 +73,7 @@ static int x11_getWindowName(Display *display, Window window, char *const buffer
 		return 1;
 	}
 
-	size_t namelen = strlen((char*)list);
+	size_t namelen = strlen((char*)list)+1;
 	if(namelen <= bufsize) {
 		memcpy(buffer, list, namelen);
 	} else {
