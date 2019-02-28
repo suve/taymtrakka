@@ -43,8 +43,10 @@ size_t os_get_db_path(char *const buffer, const size_t buflen) {
 int os_mkdir(char *const buffer) {
 	if(mkdir(buffer, 0700) == 0) return 0;
 	
+	// EEXIST tells us that the directory already exists.
+	if(errno == EEXIST) return 0;
+	
 	// ENOENT tells us that one of the parent dirs does not exist.
-	// If it's anything other than ENOENT, bail out.
 	if(errno != ENOENT) {
 		perror(APP_NAME ": Failed to create database directory");
 		return -1;
