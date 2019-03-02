@@ -37,6 +37,8 @@ void signalHandler(int signum) {
 
 int main(void) {
 	wm_init();
+	
+	db_open();
 	db_init();
 
 	struct sigaction action;
@@ -56,6 +58,6 @@ int main(void) {
 		sleep(5);
 	}
 
-	db_quit();
+	db_close();
 	wm_quit();
 }

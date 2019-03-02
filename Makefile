@@ -28,14 +28,37 @@ LDLIBS += -lm -lX11 -lsqlite3
 SOURCES := $(shell ls src/*.c)
 OBJECTS := $(SOURCES:src/%.c=build/%.o)
 
+OS_SOURCES := $(shell ls src/wm/*.c)
+WM_SOURCES := $(shell ls src/wm/*.c)
 
-build/taym-trakka: $(OBJECTS)
+QUERIES := $(shell ls sql/*.sql)
+SQL_C_FILES := $(QUERIES:sql/%.sql=src/sql/%.c)
+
+
+build/taymtrakka: $(OBJECTS)
 	mkdir -p build
 	$(CC) $(CFLAGS) -o "$@" $^ $(LDLIBS)
+
+build/db.o: src/db.c $(SQL_C_FILES)
+	mkdir -p build
+	$(CC) $(CFLAGS) -c -o "$@" "$<"
+
+build/os.o: src/os.c $(OS_SOURCES)
+	mkdir -p build
+	$(CC) $(CFLAGS) -c -o "$@" "$<"
+
+build/wm.o: src/wm.c $(WM_SOURCES)
+	mkdir -p build
+	$(CC) $(CFLAGS) -c -o "$@" "$<"
 
 build/%.o: src/%.c
 	mkdir -p build
 	$(CC) $(CFLAGS) -c -o "$@" "$<"
 
+src/sql/%.c: sql/%.sql
+	mkdir -p src/sql
+	{ echo -n '"'; tr -d '\n\t' < "$<" | sed -e 's|\\|\\\\|g' -e 's|"|\\"|g'; echo -n '"'; } > "$@"
+
 clean:
+	rm -rf src/sql/
 	rm -rf build/

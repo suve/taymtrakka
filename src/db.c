@@ -14,15 +14,46 @@
  * You should have received a copy of the GNU General Public License along with
  * this program (LICENCE.txt). If not, see <http://www.gnu.org/licenses/>.
  */
+#include <stdio.h>
+
 #include <sqlite3.h>
 
 #include "db.h"
 #include "os.h"
 
-static sqlite3* datab = NULL;
-
+static sqlite3 *datab = NULL;
 
 int db_init(void) {
+	sqlite3_stmt *query;
+	
+	int err = sqlite3_prepare_v2(datab,
+		#include "sql/db-init.c"
+		, -1,
+		&query,
+		NULL
+	);
+	if(err != SQLITE_OK) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to parse query: %s\n", errmsg);
+		
+		sqlite3_finalize(query);
+		return -1;
+	}
+	
+	err = sqlite3_step(query);
+	if(err != SQLITE_DONE) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to execute query: %s\n", errmsg);
+		
+		sqlite3_finalize(query);
+		return -1;
+	}
+	
+	sqlite3_finalize(query);
+	return 0;
+}
+
+int db_open(void) {
 	// Check if db is already open
 	if(datab != NULL) return 0;
 	
@@ -42,10 +73,17 @@ int db_init(void) {
 	
 	*slash = '/';
 	err = sqlite3_open_v2(buffer, &datab, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
-	return (err == SQLITE_OK) ? 0 : -1;
+	if(err != SQLITE_OK) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to open database: %s\n", errmsg);
+		
+		return -1;
+	}
+	
+	return 0;
 }
 
-int db_quit(void) {
+int db_close(void) {
 	sqlite3_close(datab);
 	datab = NULL;
 	return 0;

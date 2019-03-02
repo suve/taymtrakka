@@ -17,9 +17,10 @@
 #ifndef TAYMTRAKKA_DB_H
 #define TAYMTRAKKA_DB_H
 
-int db_init(void);
-int db_quit(void);
+int db_open(void);
+int db_close(void);
 
+int db_init(void);
 int db_add(const char *const windowTitle);
 
 #endif

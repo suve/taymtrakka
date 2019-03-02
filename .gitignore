@@ -4,4 +4,5 @@
 *.h.gch
 
 build/
+src/sql/
 var/
