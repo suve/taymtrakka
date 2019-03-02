@@ -26,30 +26,32 @@ static sqlite3 *datab = NULL;
 int db_init(void) {
 	sqlite3_stmt *query;
 	
-	int err = sqlite3_prepare_v2(datab,
+	const char *sql = 
 		#include "sql/db-init.c"
-		, -1,
-		&query,
-		NULL
-	);
-	if(err != SQLITE_OK) {
-		const char *errmsg = sqlite3_errstr(err);
-		fprintf(stderr, "Failed to parse query: %s\n", errmsg);
+	;
+	
+	do {
+		int err = sqlite3_prepare_v2(datab, sql, -1, &query, &sql);
+		if(err != SQLITE_OK) {
+			const char *errmsg = sqlite3_errstr(err);
+			fprintf(stderr, "Failed to parse query: %s\n", errmsg);
+			
+			sqlite3_finalize(query);
+			return -1;
+		}
+		
+		err = sqlite3_step(query);
+		if(err != SQLITE_DONE) {
+			const char *errmsg = sqlite3_errstr(err);
+			fprintf(stderr, "Failed to execute query: %s\n", errmsg);
+			
+			sqlite3_finalize(query);
+			return -1;
+		}
 		
 		sqlite3_finalize(query);
-		return -1;
-	}
+	} while(strlen(sql) > 0);
 	
-	err = sqlite3_step(query);
-	if(err != SQLITE_DONE) {
-		const char *errmsg = sqlite3_errstr(err);
-		fprintf(stderr, "Failed to execute query: %s\n", errmsg);
-		
-		sqlite3_finalize(query);
-		return -1;
-	}
-	
-	sqlite3_finalize(query);
 	return 0;
 }
 
