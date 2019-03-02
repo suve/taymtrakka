@@ -17,10 +17,15 @@
 #ifndef TAYMTRAKKA_DB_H
 #define TAYMTRAKKA_DB_H
 
+#include <stdint.h>
+#include <time.h>
+
 int db_open(void);
+int db_init(void);
 int db_close(void);
 
-int db_init(void);
-int db_add(const char *const windowTitle);
+int64_t db_getWindowID(const char *const windowTitle);
+int64_t db_datapoint_new(const int64_t windowID, const time_t startTime, const time_t endTime);
+int64_t db_datapoint_update(const int64_t dpID, const time_t endTime);
 
 #endif

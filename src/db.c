@@ -14,7 +14,9 @@
  * You should have received a copy of the GNU General Public License along with
  * this program (LICENCE.txt). If not, see <http://www.gnu.org/licenses/>.
  */
+#include <stdint.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <sqlite3.h>
 
@@ -24,6 +26,7 @@
 static struct {
 	sqlite3 *handle;
 	sqlite3_stmt *insert_window, *select_window;
+	sqlite3_stmt *insert_datapoint, *update_datapoint;
 } db;
 
 int db_init(void) {
@@ -136,13 +139,88 @@ static int select_window(const char *const windowName, sqlite3_int64 *rowID) {
 	}
 }
 
-int db_add(const char *const windowName) {
+int64_t db_getWindowID(const char *const windowName) {
 	sqlite3_int64 rowID;
 	int err = select_window(windowName, &rowID);
 
-	if(err == 0) fprintf(stderr,"--> window \"%s\" has DB ID #%llu\n", windowName, rowID);
+	return (err == 0) ? rowID : -1;
+}
 
-	return 0;
+int64_t db_datapoint_new(const int64_t windowID, const time_t startTime, const time_t endTime) {
+	int err;
+	if(db.insert_datapoint == NULL) {
+		int err = sqlite3_prepare_v2(db.handle,
+			#include "sql/insert-datapoint.c"
+			, -1,
+			&db.insert_datapoint,
+			NULL
+		);
+		if(err != SQLITE_OK) {
+			const char *errmsg = sqlite3_errstr(err);
+			fprintf(stderr, "Failed to parse query: %s\n", errmsg);
+
+			sqlite3_finalize(db.insert_datapoint);
+			db.insert_datapoint = NULL;
+			return -1;
+		}
+	}
+	sqlite3_reset(db.insert_datapoint);
+
+	err = sqlite3_bind_int64(db.insert_datapoint, 1, windowID);
+	if(err == SQLITE_OK) err = sqlite3_bind_int64(db.insert_datapoint, 2, startTime);
+	if(err == SQLITE_OK) err = sqlite3_bind_int64(db.insert_datapoint, 3, endTime);
+	if(err != SQLITE_OK) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to bind query parameter: %s\n", errmsg);
+		return -1;
+	}
+
+	err = sqlite3_step(db.insert_datapoint);
+	if(err != SQLITE_DONE) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to execute query: %s\n", errmsg);
+		return -1;
+	}
+
+	return sqlite3_last_insert_rowid(db.handle);
+} 
+
+int64_t db_datapoint_update(const int64_t dpID, const time_t endTime) {
+	int err;
+	if(db.update_datapoint == NULL) {
+		int err = sqlite3_prepare_v2(db.handle,
+			#include "sql/update-datapoint.c"
+			, -1,
+			&db.update_datapoint,
+			NULL
+		);
+		if(err != SQLITE_OK) {
+			const char *errmsg = sqlite3_errstr(err);
+			fprintf(stderr, "Failed to parse query: %s\n", errmsg);
+
+			sqlite3_finalize(db.update_datapoint);
+			db.update_datapoint = NULL;
+			return -1;
+		}
+	}
+	sqlite3_reset(db.update_datapoint);
+
+	err = sqlite3_bind_int64(db.update_datapoint, 1, dpID);
+	if(err == SQLITE_OK) err = sqlite3_bind_int64(db.update_datapoint, 3, endTime);
+	if(err != SQLITE_OK) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to bind query parameter: %s\n", errmsg);
+		return -1;
+	}
+
+	err = sqlite3_step(db.update_datapoint);
+	if(err != SQLITE_DONE) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to execute query: %s\n", errmsg);
+		return -1;
+	}
+
+	return dpID;
 }
 
 int db_open(void) {
@@ -178,6 +256,8 @@ int db_open(void) {
 int db_close(void) {
 	sqlite3_finalize(db.insert_window);
 	sqlite3_finalize(db.select_window);
+	sqlite3_finalize(db.insert_datapoint);
+	sqlite3_finalize(db.update_datapoint);
 
 	sqlite3_close(db.handle);
 	db.handle = NULL;

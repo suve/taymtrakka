@@ -14,9 +14,11 @@
  * You should have received a copy of the GNU General Public License along with
  * this program (LICENCE.txt). If not, see <http://www.gnu.org/licenses/>.
  */
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "db.h"
@@ -46,17 +48,33 @@ int main(void) {
 	sigemptyset(&action.sa_mask);
 	action.sa_flags = 0;
 	sigaction(SIGINT, &action, NULL);
-
+	
+	int64_t last_windowID = -1;
+	int64_t last_dpID = -1;
+	time_t last_time = time(NULL);
+	
 	while(!terminate) {
+		sleep(5);
+		
 		char buffer[1024];
-		if(wm_getActiveWindow(buffer, sizeof(buffer)) == 0) {
-			printf("Currently focused window: \"%s\"\n", buffer);
-			db_add(buffer);
-		} else {
+		if(wm_getActiveWindow(buffer, sizeof(buffer)) != 0) {
 			puts("Failed to get current window :(");
+			continue;
 		}
 
-		sleep(5);
+		int64_t windowID = db_getWindowID(buffer);
+		if(windowID < 0) continue;
+		
+		time_t now = time(NULL);
+		if(last_windowID != windowID) {
+			int64_t dpID = db_datapoint_new(windowID, last_time, now);
+			last_dpID = dpID;
+		} else {
+			db_datapoint_update(last_dpID, now);
+		}
+		
+		last_windowID = windowID;
+		last_time = now;
 	}
 
 	db_close();
