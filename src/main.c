@@ -51,6 +51,7 @@ int main(void) {
 		char buffer[1024];
 		if(wm_getActiveWindow(buffer, sizeof(buffer)) == 0) {
 			printf("Currently focused window: \"%s\"\n", buffer);
+			db_add(buffer);
 		} else {
 			puts("Failed to get current window :(");
 		}

@@ -55,6 +55,97 @@ int db_init(void) {
 	return 0;
 }
 
+static int insert_window(const char *const windowName, sqlite3_int64 *rowID) {
+	sqlite3_stmt *query;
+	
+	int err = sqlite3_prepare_v2(datab,
+		#include "sql/insert-window.c"
+		, -1,
+		&query,
+		NULL
+	);
+	if(err != SQLITE_OK) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to parse query: %s\n", errmsg);
+		
+		sqlite3_finalize(query);
+		return -1;
+	}
+	
+	err = sqlite3_bind_text(query, 1, windowName, -1, SQLITE_STATIC);
+	if(err != SQLITE_OK) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to bind query parameter: %s\n", errmsg);
+		
+		sqlite3_finalize(query);
+		return -1;
+	}
+	
+	err = sqlite3_step(query);
+	if(err != SQLITE_DONE) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to execute query: %s\n", errmsg);
+		
+		sqlite3_finalize(query);
+		return -1;
+	}
+	
+	*rowID = sqlite3_last_insert_rowid(datab);
+	sqlite3_finalize(query);
+	return 0;
+}
+
+static int select_window(const char *const windowName, sqlite3_int64 *rowID) {
+	sqlite3_stmt *query;
+	
+	int err = sqlite3_prepare_v2(datab,
+		#include "sql/select-window.c"
+		, -1,
+		&query,
+		NULL
+	);
+	if(err != SQLITE_OK) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to parse query: %s\n", errmsg);
+		
+		sqlite3_finalize(query);
+		return -1;
+	}
+	
+	err = sqlite3_bind_text(query, 1, windowName, -1, SQLITE_STATIC);
+	if(err != SQLITE_OK) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to bind query parameter: %s\n", errmsg);
+		
+		sqlite3_finalize(query);
+		return -1;
+	}
+	
+	err = sqlite3_step(query);
+	if(err == SQLITE_ROW) {
+		*rowID = sqlite3_column_int64(query, 0);
+		sqlite3_finalize(query);
+		return 0;
+	} else if(err == SQLITE_DONE) {
+		return insert_window(windowName, rowID);
+	} else {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to execute query: %s\n", errmsg);
+		
+		sqlite3_finalize(query);
+		return -1;
+	}
+}
+
+int db_add(const char *const windowName) {
+	sqlite3_int64 rowID;
+	int err = select_window(windowName, &rowID);
+	
+	if(err == 0) fprintf(stderr,"--> window \"%s\" has DB ID #%llu\n", windowName, rowID);
+	
+	return 0;
+}
+
 int db_open(void) {
 	// Check if db is already open
 	if(datab != NULL) return 0;
