@@ -24,6 +24,7 @@
 
 #include "db.h"
 #include "httpd.h"
+#include "utils.h"
 
 static struct MHD_Daemon *daemon = NULL;
 
@@ -44,6 +45,7 @@ struct buffer_info {
 
 static void responseBuilder(const char *windowname, int64_t totalSeconds, void* userdata) {
 	struct buffer_info *info = userdata;
+	#define _INFOBUF_    info->buffer + info->length, BUFFER_SIZE - info->length
 	
 	int seconds = totalSeconds % 60;
 	totalSeconds /= 60;
@@ -57,12 +59,9 @@ static void responseBuilder(const char *windowname, int64_t totalSeconds, void* 
 	else 
 		snprintf(timebuf, sizeof(timebuf), "%02d:%02d", minutes, seconds); 
 	
-	info->length += snprintf(
-		info->buffer + info->length,
-		BUFFER_SIZE - info->length, 
-		"<tr><td>%s</td><td>%s</td></tr>",
-		windowname, timebuf
-	);
+	info->length += snprintf(_INFOBUF_, "<tr><td>");
+	info->length += escapeHTML(_INFOBUF_, windowname);
+	info->length += snprintf(_INFOBUF_, "</td><td>%s</td></tr>", timebuf);
 }
 
 static int requestHandler(
