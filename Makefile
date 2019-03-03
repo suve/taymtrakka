@@ -19,7 +19,7 @@ CFLAGS += -D_POSIX_C_SOURCE=199309L
 CFLAGS += -Wfloat-equal -Wparentheses -Wmisleading-indentation -Wmissing-field-initializers
 CFLAGS += -Werror=incompatible-pointer-types -Werror=discarded-qualifiers -Werror=int-conversion -Werror=div-by-zero -Werror=sequence-point -Werror=uninitialized -Werror=duplicated-cond -Werror=return-type -Werror=implicit-function-declaration
 
-LDLIBS += -lm -lX11 -lsqlite3
+LDLIBS += -lm -lmicrohttpd -lsqlite3 -lX11
 
 
 .PHONY = clean

@@ -22,6 +22,7 @@
 #include <unistd.h>
 
 #include "db.h"
+#include "httpd.h"
 #include "wm.h"
 
 #define APP_NAME    "taymtrakka"
@@ -42,6 +43,8 @@ int main(void) {
 	
 	db_open();
 	db_init();
+
+	httpd_start();
 
 	struct sigaction action;
 	action.sa_handler = &signalHandler;
@@ -77,6 +80,7 @@ int main(void) {
 		last_time = now;
 	}
 
+	httpd_stop();
 	db_close();
 	wm_quit();
 }
