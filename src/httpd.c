@@ -133,6 +133,8 @@ static int requestHandler(
 	}
 	
 	struct MHD_Response *response = MHD_create_response_from_buffer(response_length, response_buffer, MHD_RESPMEM_MUST_COPY);
+	MHD_add_response_header(response, "Content-Type", "text/html;charset=UTF-8");
+	
 	int result = MHD_queue_response(connection, response_code, response);
 	MHD_destroy_response(response);
 	
