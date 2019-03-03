@@ -27,6 +27,7 @@ static struct {
 	sqlite3 *handle;
 	sqlite3_stmt *insert_window, *select_window;
 	sqlite3_stmt *insert_datapoint, *update_datapoint;
+	sqlite3_stmt *select_windowstats;
 } db;
 
 int db_init(void) {
@@ -223,6 +224,54 @@ int64_t db_datapoint_update(const int64_t dpID, const time_t endTime) {
 	return dpID;
 }
 
+int db_windowstats(const time_t startTime, const time_t endTime, WindowstatRowHandler handler, void* userdata) {
+	int err;
+	if(db.select_windowstats == NULL) {
+		int err = sqlite3_prepare_v2(db.handle,
+			#include "sql/select-windowstats.c"
+			, -1,
+			&db.select_windowstats,
+			NULL
+		);
+		if(err != SQLITE_OK) {
+			const char *errmsg = sqlite3_errstr(err);
+			fprintf(stderr, "Failed to parse query: %s\n", errmsg);
+
+			sqlite3_finalize(db.select_windowstats);
+			db.select_windowstats = NULL;
+			return -1;
+		}
+	}
+	sqlite3_reset(db.select_windowstats);
+
+	err = sqlite3_bind_int64(db.select_windowstats, 1, startTime);
+	if(err == SQLITE_OK) err = sqlite3_bind_int64(db.select_windowstats, 2, endTime);
+	if(err != SQLITE_OK) {
+		const char *errmsg = sqlite3_errstr(err);
+		fprintf(stderr, "Failed to bind query parameter: %s\n", errmsg);
+		return -1;
+	}
+
+	int rowcount = 0;
+	while(1) {
+		err = sqlite3_step(db.select_windowstats);
+		if(err == SQLITE_DONE) break;
+		
+		if(err != SQLITE_ROW) {
+			const char *errmsg = sqlite3_errstr(err);
+			fprintf(stderr, "Failed to execute query: %s\n", errmsg);
+			return -1;
+		}
+		
+		const char *windowName = sqlite3_column_text(db.select_windowstats, 0);
+		int64_t seconds = sqlite3_column_int64(db.select_windowstats, 1);
+		handler(windowName, seconds, userdata);
+		
+		++rowcount;
+	}
+	return rowcount;
+}
+
 int db_open(void) {
 	// Check if db is already open
 	if(db.handle != NULL) return 0;
@@ -245,7 +294,7 @@ int db_open(void) {
 	err = sqlite3_open_v2(buffer, &db.handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
 	if(err != SQLITE_OK) {
 		const char *errmsg = sqlite3_errstr(err);
-		fprintf(stderr, "Failed to open db.handlease: %s\n", errmsg);
+		fprintf(stderr, "Failed to open database: %s\n", errmsg);
 
 		return -1;
 	}
@@ -258,6 +307,7 @@ int db_close(void) {
 	sqlite3_finalize(db.select_window);
 	sqlite3_finalize(db.insert_datapoint);
 	sqlite3_finalize(db.update_datapoint);
+	sqlite3_finalize(db.select_windowstats);
 
 	sqlite3_close(db.handle);
 	db.handle = NULL;
