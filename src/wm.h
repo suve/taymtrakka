@@ -19,9 +19,9 @@
 
 #include <string.h>
 
-int wm_init(void);
-int wm_quit(void);
+extern int wm_init(void);
+extern int wm_quit(void);
 
-int wm_getActiveWindow(char *const buffer, const size_t bufsize);
+extern int wm_getActiveWindow(char *const buffer, const size_t bufsize);
 
 #endif

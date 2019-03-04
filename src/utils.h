@@ -19,6 +19,6 @@
 
 #include <string.h>
 
-size_t escapeHTML(char *buffer, size_t bufsize, const char *source);
+extern size_t escapeHTML(char *buffer, size_t bufsize, const char *source);
 
 #endif

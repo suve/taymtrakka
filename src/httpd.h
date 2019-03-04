@@ -17,7 +17,7 @@
 #ifndef TAYMTRAKKA_HTTPD_H
 #define TAYMTRAKKA_HTTPD_H
 
-int httpd_start(void);
-int httpd_stop(void);
+extern int httpd_start(void);
+extern int httpd_stop(void);
 
 #endif
