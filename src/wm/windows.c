@@ -31,6 +31,6 @@ int wm_getActiveWindow(char *const buffer, const size_t bufsize) {
 	HWND foreground = GetForegroundWindow();
 	if(foreground == NULL) return 1;
 
-    	GetWindowText(foreground, buffer, bufsize);
+	GetWindowText(foreground, buffer, bufsize);
 	return 0;
 }
