@@ -26,6 +26,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+const char DirSeparator = '/';
+
 size_t os_get_db_path(char *const buffer, const size_t buflen) {
 	char* datadir = getenv("XDG_DATA_HOME");
 	if(datadir != NULL) {
@@ -54,12 +56,12 @@ int os_mkdir(char *const buffer) {
 	}
 	
 	// Find the last dirname separator so we can cut off the last part
-	char *slashpos = strrchr(buffer, '/');
+	char *slashpos = strrchr(buffer, DirSeparator);
 	if(slashpos == NULL) return -1;
 	
 	*slashpos = '\0';
 	int make_parent = os_mkdir(buffer);
-	*slashpos = '/';
+	*slashpos = DirSeparator;
 	
 	return make_parent;
 }

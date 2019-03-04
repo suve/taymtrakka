@@ -25,10 +25,12 @@
 #include <unistd.h>
 #include <windows.h>
 
+const char DirSeparator = '\\';
+
 size_t os_get_db_path(char *const buffer, const size_t buflen) {
 	char* datadir = getenv("APPDATA");
 	if(datadir != NULL) {
-		return snprintf(buffer, buflen, "%s/%s/%s/%s", datadir, APP_VENDOR, APP_NAME, DBFILE);
+		return snprintf(buffer, buflen, "%s\\%s\\%s\\%s", datadir, APP_VENDOR, APP_NAME, DBFILE);
 	}
 	
 	char* home = getenv("HOME");
@@ -39,7 +41,7 @@ size_t os_get_db_path(char *const buffer, const size_t buflen) {
 		home = usernamebuf;
 	}
 	
-	return snprintf(buffer, buflen, "%s/AppData/Roaming/%s/%s/%s", home, APP_VENDOR, APP_NAME, DBFILE);
+	return snprintf(buffer, buflen, "%s\\AppData\\Roaming\\%s\\%s\\%s", home, APP_VENDOR, APP_NAME, DBFILE);
 }
 
 int os_mkdir(char *const buffer) {
@@ -55,12 +57,12 @@ int os_mkdir(char *const buffer) {
 	}
 	
 	// Find the last dirname separator so we can cut off the last part
-	char *slashpos = strrchr(buffer, '/');
+	char *slashpos = strrchr(buffer, DirSeparator);
 	if(slashpos == NULL) return -1;
 	
 	*slashpos = '\0';
 	int make_parent = os_mkdir(buffer);
-	*slashpos = '/';
+	*slashpos = DirSeparator;
 	
 	return make_parent;
 }

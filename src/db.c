@@ -286,11 +286,11 @@ int db_open(void) {
 	sqlite3_close(db.handle);
 	db.handle = NULL;
 
-	char *slash = strrchr(buffer, '/');
+	char *slash = strrchr(buffer, DirSeparator);
 	*slash = '\0';
 	if(os_mkdir(buffer) != 0) return -1;
 
-	*slash = '/';
+	*slash = DirSeparator;
 	err = sqlite3_open_v2(buffer, &db.handle, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
 	if(err != SQLITE_OK) {
 		const char *errmsg = sqlite3_errstr(err);

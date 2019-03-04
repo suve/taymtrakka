@@ -19,10 +19,12 @@
 
 #include <string.h>
 
-size_t os_get_db_path(char *const buffer, const size_t buflen);
-int os_mkdir(char *const buffer);
+extern const char DirSeparator; 
 
-void os_install_signal_handler(int *const exitFlag);
-void os_sleep(const int seconds);
+extern size_t os_get_db_path(char *const buffer, const size_t buflen);
+extern int os_mkdir(char *const buffer);
+
+extern void os_install_signal_handler(int *const exitFlag);
+extern void os_sleep(const int seconds);
 
 #endif
