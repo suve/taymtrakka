@@ -17,12 +17,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
 #include <time.h>
-#include <unistd.h>
 
 #include "db.h"
 #include "httpd.h"
+#include "os.h"
 #include "wm.h"
 
 #define APP_NAME    "taymtrakka"
@@ -31,33 +30,20 @@
 
 static int terminate = 0;
 
-#define UNUSED(x) (void)(x)
-void signalHandler(int signum) {
-	UNUSED(signum);
-
-	terminate = 1;
-}
 
 int main(void) {
 	wm_init();
-	
 	db_open();
 	db_init();
-
 	httpd_start();
+	os_install_signal_handler(&terminate);
 
-	struct sigaction action;
-	action.sa_handler = &signalHandler;
-	sigemptyset(&action.sa_mask);
-	action.sa_flags = 0;
-	sigaction(SIGINT, &action, NULL);
-	
 	int64_t last_windowID = -1;
 	int64_t last_dpID = -1;
 	time_t last_time = time(NULL);
 	
 	while(!terminate) {
-		sleep(5);
+		os_sleep(5);
 		
 		char buffer[1024];
 		if(wm_getActiveWindow(buffer, sizeof(buffer)) != 0) {

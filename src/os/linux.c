@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <signal.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -61,6 +62,26 @@ int os_mkdir(char *const buffer) {
 	*slashpos = '/';
 	
 	return make_parent;
+}
+
+static int *exitFlag = NULL;
+
+#define UNUSED(x) (void)(x)
+static void signalHandler(int signum) {
+        UNUSED(signum);
+
+        *exitFlag = 1;
+}
+
+int os_install_signal_handler(int *const arg_exitFlag) {
+	exitFlag = arg_exitFlag;
+
+        struct sigaction action;
+        action.sa_handler = &signalHandler;
+        sigemptyset(&action.sa_mask);
+        action.sa_flags = 0;
+
+        return sigaction(SIGINT, &action, NULL);
 }
 
 void os_sleep(const int seconds) {
