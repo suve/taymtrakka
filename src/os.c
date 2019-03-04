@@ -20,4 +20,8 @@
 
 #if defined(unix) || defined(__unix) || defined(__unix__)
 	#include "os/linux.c"
+#else
+#if defined(_WIN32) || defined(_WIN64)
+	#include "os/windows.c"
+#endif
 #endif

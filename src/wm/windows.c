@@ -14,10 +14,23 @@
  * You should have received a copy of the GNU General Public License along with
  * this program (LICENCE.txt). If not, see <http://www.gnu.org/licenses/>.
  */
-#if defined(unix) || defined(__unix) || defined(__unix__)
-	#include "wm/x11.c"
-#else
-#if defined(_WIN32) || defined(_WIN64)
-	#include "wm/windows.c"
-#endif
-#endif
+#include <stdlib.h>
+#include <string.h>
+
+#include <windows.h>
+
+int wm_init(void) {
+	return 0;
+}
+
+int wm_quit(void) {
+	return 0;
+}
+
+int wm_getActiveWindow(char *const buffer, const size_t bufsize) {
+	HWND foreground = GetForegroundWindow();
+	if(foreground == NULL) return 1;
+
+    	GetWindowText(foreground, buffer, bufsize);
+	return 0;
+}
