@@ -57,7 +57,7 @@ build/%.o: src/%.c
 
 src/sql/%.c: sql/%.sql
 	mkdir -p src/sql
-	{ echo -n '"'; tr -s '\n\t' '  ' < "$<" | sed -e 's|\\|\\\\|g' -e 's|"|\\"|g' -e 's/;[ ]*$$//'; echo -n '"'; } > "$@"
+	{ echo -n '"'; < "$<" sed -e 's|--.*$$||' | tr -s '\n\r\t' '  ' | sed -e 's|\\|\\\\|g' -e 's|"|\\"|g' -e 's/^[ ]*//' -e 's/;[ ]*$$//'; echo -n '"'; } > "$@"
 
 clean:
 	rm -rf src/sql/
