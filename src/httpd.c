@@ -89,12 +89,9 @@ static int requestHandler(
 		struct tm now;
 		gmtime_r(&now_epoch, &now);
 		
-		char datebuffer[32];
-		strftime(datebuffer, sizeof(datebuffer), "%A %Y-%m-%d", &now);
-		
 		struct FormatArg headerArgs[] = {
 			{.type = ARG_STRING, .v_string = "taymtrakka"},
-			{.type = ARG_STRING, .v_string = datebuffer},
+			{.type = ARG_INT, .v_int = now_epoch},
 			{.type = ARG_STRING, .v_string = "Window name"},
 			{.type = ARG_STRING, .v_string = "Total time"},
 			{.type = ARG_NONE}
@@ -102,7 +99,7 @@ static int requestHandler(
 		info.length += formatstr(
 			buffer + info.length,
 			BUFFER_SIZE - info.length,
-			"<!DOCTYPE html><html><head><title>{0}</title></head><body><h1>Statistics for {1}</h1><table><thead><tr><th>{2}</th><th>{3}</th></tr></thead><tbody>",
+			"<!DOCTYPE html><html><head><title>{0}</title></head><body><h1>Statistics for {1:date}</h1><table><thead><tr><th>{2}</th><th>{3}</th></tr></thead><tbody>",
 			headerArgs
 		);
 		

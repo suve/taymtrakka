@@ -17,6 +17,7 @@
 #ifndef TAYMTRAKKA_FORMATSTR_H
 #define TAYMTRAKKA_FORMATSTR_H
 
+#include <stdint.h>
 #include <string.h>
 
 enum FormatArgType {
@@ -31,11 +32,11 @@ enum FormatArgType {
 struct FormatArg {
 	enum FormatArgType type;
 	union {
-		const char   v_char;
-		const char*  v_string;
-		const int    v_int;
-		const float  v_float;
-		const double v_double;
+		const char    v_char;
+		const char*   v_string;
+		const int64_t v_int;
+		const float   v_float;
+		const double  v_double;
 	};
 };
 

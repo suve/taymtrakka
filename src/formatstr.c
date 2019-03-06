@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 #include "formatstr.h"
 #include "utils.h"
@@ -42,6 +43,7 @@ enum SpecifierFormat {
 	SPEC_STRING_RAW,
 	SPEC_STRING_HTML,
 	SPEC_TIME,
+	SPEC_DATE,
 };
 
 struct ArgumentSpecifier {
@@ -105,6 +107,8 @@ static struct ArgumentSpecifier parsespec(const char *open, const char *close, c
 		spec.format = SPEC_STRING_HTML;
 	} else if(streq(colon, "time")) {
 		spec.format = SPEC_TIME;
+	} else if(streq(colon, "date")) {
+		spec.format = SPEC_DATE;
 	} else {
 		spec.format = defaultformat(args[spec.argno].type);
 	}
@@ -263,6 +267,52 @@ static size_t printspec_string(char *buffer, const size_t bufsize, const struct 
 		return snprintf(buffer, bufsize, "%s", bytes);
 }
 
+static size_t printspec_date(char *buffer, const size_t bufsize, const struct FormatArg arg) {
+	time_t epoch;
+	struct tm tm;
+	int use_tm = 0;
+
+	struct tm *blah;
+	switch(arg.type) {
+		case ARG_CHAR:
+			epoch = arg.v_char;
+		break;
+
+		// TODO: Make this work on Windows
+		case ARG_STRING:
+#if defined(unix) || defined(__unix) || defined(__unix__)
+			blah = getdate(arg.v_string);
+			if(blah != NULL) {
+				tm = *blah;
+				use_tm = 1;
+			} else {
+				epoch = time(NULL);
+			}
+#else
+			epoch = 0;
+#endif
+		break;
+
+		case ARG_INT:
+			epoch = arg.v_int;
+		break;
+
+		case ARG_FLOAT:
+			epoch = arg.v_float;
+		break;
+
+		case ARG_DOUBLE:
+			epoch = arg.v_double;
+		break;
+
+		default:
+			epoch = 0;
+	}
+
+	if(!use_tm) gmtime_r(&epoch, &tm);
+	return strftime(buffer, bufsize, "%A %Y-%m-%d", &tm);
+}
+
 static size_t printspec(char *buffer, const size_t bufsize, const struct ArgumentSpecifier spec, const struct FormatArg *args) {
 	switch(spec.format) {
 		case SPEC_INT:
@@ -285,6 +335,9 @@ static size_t printspec(char *buffer, const size_t bufsize, const struct Argumen
 
 		case SPEC_TIME:
 			return printspec_int(buffer, bufsize, args[spec.argno], 2);
+
+		case SPEC_DATE:
+			return printspec_date(buffer, bufsize, args[spec.argno]);
 
 		case SPEC_NONE:
 		default:
