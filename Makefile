@@ -35,12 +35,19 @@ WM_SOURCES := $(shell ls src/wm/*.c)
 QUERIES := $(shell ls sql/*.sql)
 SQL_C_FILES := $(QUERIES:sql/%.sql=src/sql/%.c)
 
+STATIC_FILES := $(shell ls files/*)
+STATIC_C_FILES := $(STATIC_FILES:files/%=src/files/%.c) 
+
 
 build/taymtrakka: $(OBJECTS)
 	mkdir -p build
 	$(CC) $(CFLAGS) -o "$@" $^ $(LDLIBS)
 
-build/db.o: src/db.c $(SQL_C_FILES)
+build/db.o: src/db.c src/files/index.c $(SQL_C_FILES)
+	mkdir -p build
+	$(CC) $(CFLAGS) -c -o "$@" "$<"
+
+build/httpd.o: src/httpd.c $(STATIC_C_FILES)
 	mkdir -p build
 	$(CC) $(CFLAGS) -c -o "$@" "$<"
 
@@ -60,6 +67,16 @@ src/sql/%.c: sql/%.sql
 	mkdir -p src/sql
 	{ echo -n '"'; < "$<" sed -e 's|--.*$$||' | tr -s '\n\r\t' '  ' | sed -e 's|\\|\\\\|g' -e 's|"|\\"|g' -e 's/^[ ]*//' -e 's/;[ ]*$$//'; echo -n '"'; } > "$@"
 
+src/files/index.c: $(STATIC_FILES)
+	mkdir -p src/files
+	echo -n '' > "$@"
+	for FILE in $(notdir $(STATIC_FILES)); do echo -e -n "if(strcmp(url, \"$$FILE\") == 0) staticdata = \n#include \"files/$$FILE.c\"\n;else " >> "$@"; done
+	echo "staticdata = NULL;" >> "$@"
+
+src/files/%.css.c: files/%.css
+	mkdir -p src/files
+	{ echo -n '"'; < "$<" tr -s '\n\r\t' '  ' | sed -e 's|\/\*.*\*\/||g' -e 's|\\|\\\\|g' -e 's|"|\\"|g' -e 's/;[ ]*$$//'; echo -n '"'; } > "$@"
+
 clean:
-	rm -rf src/sql/
+	rm -rf src/sql/ src/files/
 	rm -rf build/

@@ -44,7 +44,7 @@ struct buffer_info {
 	size_t length;
 };
 
-static void responseBuilder(const char *windowname, int64_t totalSeconds, void* userdata) {
+static void buildWindowRow(const char *windowname, int64_t totalSeconds, void* userdata) {
 	struct buffer_info *info = userdata;
 	#define _INFOBUF_    info->buffer + info->length, BUFFER_SIZE - info->length
 
@@ -56,28 +56,7 @@ static void responseBuilder(const char *windowname, int64_t totalSeconds, void* 
 	info->length += formatstr(_INFOBUF_, "<tr><td>{0:html}</td><td>{1:time}</td></tr>\n", args);
 }
 
-static int requestHandler(
-	void *userdata, 
-	struct MHD_Connection *connection,
-	const char *url, 
-	const char *method,
-	const char *version,
-	const char *upload_data,
-	size_t *upload_data_size,
-	void **conn_userdata
-) {
-	UNUSED(userdata);
-	UNUSED(conn_userdata);
-	UNUSED(url);
-	UNUSED(method);
-	UNUSED(version);
-	UNUSED(upload_data);
-	UNUSED(upload_data_size);
-	
-	char *response_buffer;
-	size_t response_length;
-	int response_code;
-	
+static void buildResponse(char **response_buffer, int *freebuf, size_t *response_length, int *response_code) {
 	char *buffer = malloc(64 * 1024);
 	if(buffer != NULL) {
 		struct buffer_info info = (struct buffer_info){
@@ -99,7 +78,11 @@ static int requestHandler(
 		info.length += formatstr(
 			buffer + info.length,
 			BUFFER_SIZE - info.length,
-			"<!DOCTYPE html><html><head><title>{0}</title></head><body><h1>Statistics for {1:date}</h1><table><thead><tr><th>{2}</th><th>{3}</th></tr></thead><tbody>",
+			"<!DOCTYPE html><html><head>\n"
+			"<title>{0}</title>\n"
+			"<link type=\"text/css\" rel=\"stylesheet\" href=\"/files/style.css\">\n"
+			"</head><body><h1>Statistics for {1:date}</h1>\n"
+			"<table><thead><tr><th>{2}</th><th>{3}</th></tr></thead><tbody>\n",
 			headerArgs
 		);
 		
@@ -111,7 +94,7 @@ static int requestHandler(
 		now.tm_hour = 24;
 		time_t today_end = mktime(&now);
 		
-		db_windowstats(today_start, today_end, &responseBuilder, &info);
+		db_windowstats(today_start, today_end, &buildWindowRow, &info);
 		
 		info.length += snprintf(
 			buffer + info.length,
@@ -119,22 +102,65 @@ static int requestHandler(
 			"</tbody></table></html>"
 		);
 		
-		response_buffer = buffer;
-		response_length = info.length;
-		response_code = 200;
+		*response_buffer = buffer;
+		*freebuf = 1;
+		*response_length = info.length;
+		*response_code = 200;
 	} else {
-		response_buffer = (char*)response500; // Explicitly discard const
-		response_length = strlen(response500);
-		response_code = 500;
+		*response_buffer = (char*)response500; // Explicitly discard const
+		*freebuf = 0;
+		*response_length = strlen(response500);
+		*response_code = 500;
 	}
+}
+
+static void serveStaticFile(const char *url, char **response_buffer, size_t *response_length, int *response_code) {
+	// Look into the Makefile to find out how the list of url-data pairs is constructed.
+	// Beware, for it is not pretty.
+	char *staticdata;
+	#include "files/index.c"
+
+	*response_buffer = staticdata;
+	*response_length = (staticdata != NULL) ? strlen(staticdata) : 0;
+	*response_code = (staticdata != NULL) ? 200 : 404;
+}
+
+#define STATICFILES_PREFIX "/files/"
+#define STATICFILES_PREFIX_LENGTH strlen(STATICFILES_PREFIX)
+static int requestHandler(
+	void *userdata, 
+	struct MHD_Connection *connection,
+	const char *url, 
+	const char *method,
+	const char *version,
+	const char *upload_data,
+	size_t *upload_data_size,
+	void **conn_userdata
+) {
+	UNUSED(userdata);
+	UNUSED(conn_userdata);
+	UNUSED(method);
+	UNUSED(version);
+	UNUSED(upload_data);
+	UNUSED(upload_data_size);
+	
+	char *response_buffer;
+	int freebuf = 0;
+	size_t response_length;
+	int response_code;
+	
+	if(strncmp(url, STATICFILES_PREFIX, STATICFILES_PREFIX_LENGTH) == 0)
+		serveStaticFile(url+STATICFILES_PREFIX_LENGTH, &response_buffer, &response_length, &response_code);
+	else
+		buildResponse(&response_buffer, &freebuf, &response_length, &response_code);
 	
 	struct MHD_Response *response = MHD_create_response_from_buffer(response_length, response_buffer, MHD_RESPMEM_MUST_COPY);
-	MHD_add_response_header(response, "Content-Type", "text/html;charset=UTF-8");
+	// MHD_add_response_header(response, "Content-Type", "text/html;charset=UTF-8");
 	
 	int result = MHD_queue_response(connection, response_code, response);
 	MHD_destroy_response(response);
 	
-	if(buffer != NULL) free(buffer);
+	if(freebuf) free(response_buffer);
 	return result;
 }
 
