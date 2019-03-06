@@ -19,6 +19,7 @@
 
 #include <string.h>
 
+extern size_t duration(char *buffer, const size_t bufsize, long unsigned int seconds);
 extern size_t escapeHTML(char *buffer, size_t bufsize, const char *source);
 
 #endif

@@ -14,7 +14,25 @@
  * You should have received a copy of the GNU General Public License along with
  * this program (LICENCE.txt). If not, see <http://www.gnu.org/licenses/>.
  */
+#include <stdio.h>
 #include <string.h>
+
+size_t duration(char *buffer, const size_t bufsize, long unsigned int total) {
+	int seconds = total % 60;
+	total /= 60;
+
+	int minutes = total % 60;
+	total /= 60;
+
+	int hours = total % 24;
+	total /= 24;
+
+	int days = total;
+
+	if(days > 0) return snprintf(buffer, bufsize, "%d:%02d:%02d:%02d", days, hours, minutes, seconds);
+	if(hours > 0) return snprintf(buffer, bufsize, "%02d:%02d:%02d", hours, minutes, seconds);
+	return snprintf(buffer, bufsize, "%02d:%02d", minutes, seconds);
+}
 
 size_t escapeHTML(char *buffer, size_t bufsize, const char *source) {
 	size_t originalSize = bufsize;

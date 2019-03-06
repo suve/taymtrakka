@@ -41,6 +41,7 @@ enum SpecifierFormat {
 	SPEC_CHAR,
 	SPEC_STRING_RAW,
 	SPEC_STRING_HTML,
+	SPEC_TIME,
 };
 
 struct ArgumentSpecifier {
@@ -102,6 +103,8 @@ static struct ArgumentSpecifier parsespec(const char *open, const char *close, c
 		spec.format = SPEC_STRING_RAW;
 	} else if(streq(colon, "html")) {
 		spec.format = SPEC_STRING_HTML;
+	} else if(streq(colon, "time")) {
+		spec.format = SPEC_TIME;
 	} else {
 		spec.format = defaultformat(args[spec.argno].type);
 	}
@@ -136,6 +139,10 @@ static size_t printspec_int(char *buffer, const size_t bufsize, const struct For
 		default:
 			value = 0;
 	}
+
+	// Special case with a magic value, yay!
+	// TODO: at least add "#define BUTT 2" or something
+	if(hex == 2) return duration(buffer, bufsize, value);
 
 	return snprintf(buffer, bufsize, hex ? "%lx" : "%ld", value);
 }
@@ -275,6 +282,9 @@ static size_t printspec(char *buffer, const size_t bufsize, const struct Argumen
 
 		case SPEC_STRING_HTML:
 			return printspec_string(buffer, bufsize, args[spec.argno], 1);
+
+		case SPEC_TIME:
+			return printspec_int(buffer, bufsize, args[spec.argno], 2);
 
 		case SPEC_NONE:
 		default:
