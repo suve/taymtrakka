@@ -23,6 +23,7 @@
 #include <microhttpd.h>
 
 #include "db.h"
+#include "formatstr.h"
 #include "httpd.h"
 #include "utils.h"
 
@@ -46,22 +47,13 @@ struct buffer_info {
 static void responseBuilder(const char *windowname, int64_t totalSeconds, void* userdata) {
 	struct buffer_info *info = userdata;
 	#define _INFOBUF_    info->buffer + info->length, BUFFER_SIZE - info->length
-	
-	int seconds = totalSeconds % 60;
-	totalSeconds /= 60;
-	int minutes = totalSeconds % 60;
-	totalSeconds /= 60;
-	int hours = totalSeconds;
-	
-	char timebuf[16];
-	if(hours > 0)
-		snprintf(timebuf, sizeof(timebuf), "%02d:%02d:%02d", hours, minutes, seconds);
-	else 
-		snprintf(timebuf, sizeof(timebuf), "%02d:%02d", minutes, seconds); 
-	
-	info->length += snprintf(_INFOBUF_, "<tr><td>");
-	info->length += escapeHTML(_INFOBUF_, windowname);
-	info->length += snprintf(_INFOBUF_, "</td><td>%s</td></tr>", timebuf);
+
+	struct FormatArg args[] = {
+		{.type = ARG_STRING, .v_string = windowname},
+		{.type = ARG_INT, .v_int = totalSeconds},
+		{.type = ARG_NONE},
+	};
+	info->length += formatstr(_INFOBUF_, "<tr><td>{0:html}</td><td>{1:time}</td></tr>\n", args);
 }
 
 static int requestHandler(
@@ -100,11 +92,18 @@ static int requestHandler(
 		char datebuffer[32];
 		strftime(datebuffer, sizeof(datebuffer), "%A %Y-%m-%d", &now);
 		
-		info.length += snprintf(
+		struct FormatArg headerArgs[] = {
+			{.type = ARG_STRING, .v_string = "taymtrakka"},
+			{.type = ARG_STRING, .v_string = datebuffer},
+			{.type = ARG_STRING, .v_string = "Window name"},
+			{.type = ARG_STRING, .v_string = "Total time"},
+			{.type = ARG_NONE}
+		};
+		info.length += formatstr(
 			buffer + info.length,
 			BUFFER_SIZE - info.length,
-			"<!DOCTYPE html><html><head><title>%s</title></head><body><h1>Statistics for %s</h1><table><thead><tr><th>%s</th><th>%s</th></tr></thead><tbody>",
-			"taymtrakka", datebuffer, "Window name", "Total time"
+			"<!DOCTYPE html><html><head><title>{0}</title></head><body><h1>Statistics for {1}</h1><table><thead><tr><th>{2}</th><th>{3}</th></tr></thead><tbody>",
+			headerArgs
 		);
 		
 		now.tm_isdst = -1;

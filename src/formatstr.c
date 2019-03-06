@@ -292,6 +292,7 @@ static size_t printspec(char *buffer, const size_t bufsize, const struct Argumen
 	}
 }
 
+#define _BUFFER_  buffer+written, bufsize-written
 size_t formatstr(char *buffer, const size_t bufsize, const char *format, const struct FormatArg *args) {
 	int argcount = countargs(args);
 	size_t written = 0;
@@ -300,11 +301,11 @@ size_t formatstr(char *buffer, const size_t bufsize, const char *format, const s
 	for(;;) {
 		char *open = strchr(fmt, '{');
 		if(open == NULL) {
-			written += copymem(buffer, bufsize - written, fmt, strlen(fmt));
+			written += copymem(_BUFFER_, fmt, strlen(fmt));
 			break;
 		}
 
-		written += copymem(buffer, bufsize - written, fmt, open - fmt);
+		written += copymem(_BUFFER_, fmt, open - fmt);
 		if(written == bufsize) break;
 		
 		char *close = strchr(open, '}');
@@ -312,7 +313,7 @@ size_t formatstr(char *buffer, const size_t bufsize, const char *format, const s
 		fmt = close + 1;
 
 		struct ArgumentSpecifier spec = parsespec(open, close, args, argcount);
-		written += printspec(buffer, bufsize - written, spec, args);
+		written += printspec(_BUFFER_, spec, args);
 		if(written == bufsize) break;
 	}
 

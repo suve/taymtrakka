@@ -31,11 +31,11 @@ enum FormatArgType {
 struct FormatArg {
 	enum FormatArgType type;
 	union {
-		char   v_char;
-		char*  v_string;
-		int    v_int;
-		float  v_float;
-		double v_double;
+		const char   v_char;
+		const char*  v_string;
+		const int    v_int;
+		const float  v_float;
+		const double v_double;
 	};
 };
 
