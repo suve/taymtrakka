@@ -16,7 +16,11 @@
 --
 SELECT
 	"wnd_name",
-	TOTAL("dp_end" - "dp_start") AS "wnd_seconds"
+	TOTAL(
+		CASE WHEN "dp_end" <= ?2 THEN "dp_end" ELSE ?2 END
+		- 
+		CASE WHEN "dp_start" >= ?1 THEN "dp_start" ELSE ?1 END
+	) AS "wnd_seconds"
 FROM
 	"datapoints"
 LEFT JOIN
