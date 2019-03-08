@@ -15,18 +15,24 @@
 -- this program (LICENCE.txt). If not, see <http://www.gnu.org/licenses/>.
 --
 PRAGMA page_size = 4096;
+PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS "windows" (
 	"wnd_id" INTEGER PRIMARY KEY ASC ON CONFLICT FAIL AUTOINCREMENT,
-	"wnd_name" TEXT UNIQUE
+	"wnd_name" TEXT
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS "windows_name_idx" ON "windows" ("wnd_name");
 
 CREATE TABLE IF NOT EXISTS "datapoints" (
 	"dp_id" INTEGER PRIMARY KEY ASC ON CONFLICT FAIL AUTOINCREMENT,
-	"dp_wnd_id" INTEGER,
-	"dp_start" INTEGER,
-	"dp_end" INTEGER
+	"dp_wnd_id" INTEGER REFERENCES "windows" ("wnd_id")
+	"dp_start" INTEGER NOT NULL,
+	"dp_end" INTEGER NOT NULL
 );
+
+CREATE INDEX IF NOT EXISTS "datapoints_start_idx" ON "datapoints" ("dp_start");
+CREATE INDEX IF NOT EXISTS "datapoints_end_idx" ON "datapoints" ("dp_end");
 
 CREATE TABLE IF NOT EXISTS "labels" (
 	"lbl_id" INTEGER PRIMARY KEY ASC ON CONFLICT FAIL AUTOINCREMENT,
