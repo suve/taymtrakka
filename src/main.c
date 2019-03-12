@@ -44,17 +44,18 @@ int main(void) {
 	
 	while(!terminate) {
 		os_sleep(5);
+		time_t now = time(NULL);
 		
 		char buffer[1024];
 		if(wm_getActiveWindow(buffer, sizeof(buffer)) != 0) {
 			puts("Failed to get current window :(");
+			last_time = now;
 			continue;
 		}
 
 		int64_t windowID = db_getWindowID(buffer);
 		if(windowID < 0) continue;
 		
-		time_t now = time(NULL);
 		if(last_windowID != windowID) {
 			int64_t dpID = db_datapoint_new(windowID, last_time, now);
 			last_dpID = dpID;
