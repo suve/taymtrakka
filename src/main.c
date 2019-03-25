@@ -24,14 +24,10 @@
 #include "os.h"
 #include "wm.h"
 
-#define APP_NAME    "taymtrakka"
-#define APP_VERSION "v.0.1"
-
 #define SLEEP_TIME 5
 #define MAX_SLEEP_TIME (3 * SLEEP_TIME)
 
 static int terminate = 0;
-
 
 int main(void) {
 	wm_init();

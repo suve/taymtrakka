@@ -14,14 +14,26 @@
  * You should have received a copy of the GNU General Public License along with
  * this program (LICENCE.txt). If not, see <http://www.gnu.org/licenses/>.
  */
-#include "version.h"
+#ifndef TAYMTRAKKA_VERSION_H
+#define TAYMTRAKKA_VERSION_H
 
-#define DBFILE "db.sqlite"
+#define APP_VENDOR "suve"
+#define APP_NAME "taymtrakka"
 
-#if defined(unix) || defined(__unix) || defined(__unix__)
-	#include "os/linux.c"
+#define APP_VERSION_MAJOR  0
+#define APP_VERSION_MINOR  1
+#define APP_VERSION_BUGFIX 0
+
+#define __STRINGIFY(val) #val
+#define __TOSTRING(val) __STRINGIFY(val)
+
+#if APP_VERSION_BUGFIX > 0
+	#define APP_VERSION_STRING "v." __TOSTRING(APP_VERSION_MAJOR) "." __TOSTRING(APP_VERSION_MINOR) "." __TOSTRING(APP_VERSION_BUGFIX)
 #else
-#if defined(_WIN32) || defined(_WIN64)
-	#include "os/windows.c"
+	#define APP_VERSION_STRING "v." __TOSTRING(APP_VERSION_MAJOR) "." __TOSTRING(APP_VERSION_MINOR)
 #endif
+
+#undef __STRINGIFY
+#undef __TOSTRING
+
 #endif
