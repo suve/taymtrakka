@@ -27,6 +27,8 @@
 #define APP_NAME    "taymtrakka"
 #define APP_VERSION "v.0.1"
 
+#define SLEEP_TIME 5
+#define MAX_SLEEP_TIME (3 * SLEEP_TIME)
 
 static int terminate = 0;
 
@@ -43,9 +45,16 @@ int main(void) {
 	time_t last_time = time(NULL);
 	
 	while(!terminate) {
-		os_sleep(5);
+		os_sleep(SLEEP_TIME);
 		time_t now = time(NULL);
 		
+		long long int slept = now - last_time;
+		if(slept > MAX_SLEEP_TIME) {
+			printf("Unexpectedly long sleep time (%lld seconds). Ignoring this time period.\n", slept);
+			last_time = now;
+			continue;
+		}
+
 		char buffer[1024];
 		if(wm_getActiveWindow(buffer, sizeof(buffer)) != 0) {
 			puts("Failed to get current window :(");
