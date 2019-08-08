@@ -33,7 +33,4 @@
 	#define APP_VERSION_STRING "v." __TOSTRING(APP_VERSION_MAJOR) "." __TOSTRING(APP_VERSION_MINOR)
 #endif
 
-#undef __STRINGIFY
-#undef __TOSTRING
-
 #endif
