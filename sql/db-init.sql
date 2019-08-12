@@ -26,7 +26,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "windows_name_idx" ON "windows" ("wnd_name");
 
 CREATE TABLE IF NOT EXISTS "datapoints" (
 	"dp_id" INTEGER PRIMARY KEY ASC ON CONFLICT FAIL AUTOINCREMENT,
-	"dp_wnd_id" INTEGER REFERENCES "windows" ("wnd_id")
+	"dp_wnd_id" INTEGER REFERENCES "windows" ("wnd_id"),
 	"dp_start" INTEGER NOT NULL,
 	"dp_end" INTEGER NOT NULL
 );
