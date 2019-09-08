@@ -56,15 +56,9 @@ jobs:
           name: Install dependencies
           command: >
             sudo dnf install --assumeyes --setopt=install_weak_deps=False
-            git wget zip
-            libmicrohttpd-devel libX11-devel sqlite-devel
+            copydeps git zip
+            libmicrohttpd libX11 sqlite
             mingw64-libmicrohttpd mingw64-sqlite
-      - run:
-          name: Install copydeps
-          command: |
-            sudo dnf install dnf-plugins-core --assumeyes
-            sudo dnf copr enable suve/copydeps --assumeyes
-            sudo dnf install copydeps --assumeyes
       - checkout
       - attach_workspace:
           at: /tmp/workspace
