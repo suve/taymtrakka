@@ -75,7 +75,7 @@ src/files/index.c: $(STATIC_FILES)
 
 src/files/%.css.c: files/%.css
 	mkdir -p src/files
-	{ echo -n '"'; < "$<" tr -s '\n\r\t' '  ' | sed -e 's|\/\*.*\*\/||g' -e 's|\\|\\\\|g' -e 's|"|\\"|g' -e 's/;[ ]*$$//'; echo -n '"'; } > "$@"
+	tools/squish-css.py < "$<" > "$@"
 
 clean:
 	rm -rf src/sql/ src/files/

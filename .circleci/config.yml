@@ -13,7 +13,7 @@ jobs:
           name: Install dependencies
           command: >
             sudo dnf install --assumeyes --setopt=install_weak_deps=False
-            gcc git make sed
+            gcc git make python3-rcssmin sed
             libmicrohttpd-devel libX11-devel sqlite-devel
       - checkout
       - run:
@@ -30,7 +30,7 @@ jobs:
           name: Install dependencies
           command: >
             sudo dnf install --assumeyes --setopt=install_weak_deps=False
-            git make sed
+            git make python3-rcssmin sed
             mingw64-gcc mingw64-libmicrohttpd mingw64-sqlite
       - checkout
       - run:
