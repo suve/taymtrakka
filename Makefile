@@ -65,7 +65,7 @@ build/%.o: src/%.c
 
 src/sql/%.c: sql/%.sql
 	mkdir -p src/sql
-	{ echo -n '"'; < "$<" sed -e 's|--.*$$||' | tr -s '\n\r\t' '  ' | sed -e 's|\\|\\\\|g' -e 's|"|\\"|g' -e 's/^[ ]*//' -e 's/;[ ]*$$//'; echo -n '"'; } > "$@"
+	tools/squish-sql.py < "$<" > "$@"
 
 src/files/index.c: $(STATIC_FILES)
 	mkdir -p src/files
