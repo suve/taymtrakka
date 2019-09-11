@@ -29,7 +29,7 @@ LDLIBS += -lm -lmicrohttpd -lsqlite3 -lX11
 SOURCES := $(shell ls src/*.c)
 OBJECTS := $(SOURCES:src/%.c=build/%.o)
 
-OS_SOURCES := $(shell ls src/wm/*.c)
+OS_SOURCES := $(shell ls src/os/*.c)
 WM_SOURCES := $(shell ls src/wm/*.c)
 
 QUERIES := $(shell ls sql/*.sql)
@@ -40,43 +40,30 @@ STATIC_C_FILES := $(STATIC_FILES:files/%=src/files/%.c)
 
 
 build/taymtrakka: $(OBJECTS)
-	mkdir -p build
+	mkdir -p "$(dir $@)"
 	$(CC) $(CFLAGS) -o "$@" $^ $(LDLIBS)
 
 build/db.o: src/db.c src/files/index.c $(SQL_C_FILES)
-	mkdir -p build
-	$(CC) $(CFLAGS) -c -o "$@" "$<"
-
 build/httpd.o: src/httpd.c $(STATIC_C_FILES)
-	mkdir -p build
-	$(CC) $(CFLAGS) -c -o "$@" "$<"
-
 build/os.o: src/os.c $(OS_SOURCES)
-	mkdir -p build
-	$(CC) $(CFLAGS) -c -o "$@" "$<"
-
 build/wm.o: src/wm.c $(WM_SOURCES)
-	mkdir -p build
-	$(CC) $(CFLAGS) -c -o "$@" "$<"
-
 build/%.o: src/%.c
-	mkdir -p build
+	mkdir -p "$(dir $@)"
 	$(CC) $(CFLAGS) -c -o "$@" "$<"
 
 src/sql/%.c: sql/%.sql
-	mkdir -p src/sql
+	mkdir -p "$(dir $@)"
 	tools/squish-sql.py < "$<" > "$@"
 
 src/files/index.c: $(STATIC_FILES)
-	mkdir -p src/files
+	mkdir -p "$(dir $@)"
 	echo -n '' > "$@"
 	for FILE in $(notdir $(STATIC_FILES)); do echo -e -n "if(strcmp(url, \"$$FILE\") == 0) staticdata = \n#include \"files/$$FILE.c\"\n;else " >> "$@"; done
 	echo "staticdata = NULL;" >> "$@"
 
 src/files/%.css.c: files/%.css
-	mkdir -p src/files
+	mkdir -p "$(dir $@)"
 	tools/squish-css.py < "$<" > "$@"
 
 clean:
-	rm -rf src/sql/ src/files/
-	rm -rf build/
+	rm -rf src/sql/ src/files/ build/
