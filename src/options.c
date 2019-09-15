@@ -23,6 +23,7 @@
 static void setDefaults(struct Options *opts) {
 	*opts = (struct Options){
 		.portNumber = 36912,
+		.updateInterval = 5,
 	};
 }
 
@@ -32,10 +33,12 @@ static void setDefaults(struct Options *opts) {
 #define ARG_REQUIRE required_argument
 
 enum OptionName {
-	OPT_PORT = 1
+	OPT_INTERVAL = 1,
+	OPT_PORT,
 };
 
 static struct option OptionList[] = {
+	{ "interval", ARG_REQUIRE, NULL, OPT_PORT },
 	{ "port", ARG_REQUIRE, NULL, OPT_PORT },
 	{ 0, 0, 0, 0 },
 };
@@ -51,6 +54,10 @@ void options_parse(int argc, char **argv, struct Options *opts) {
 		if(optionCurrent == -1) break;
 
 		switch (optionCurrent) {
+			case OPT_INTERVAL:
+				opts->updateInterval = atoi(optarg); // TODO: error checking
+			break;
+			
 			case OPT_PORT:
 				opts->portNumber = atoi(optarg); // TODO: error checking
 			break;

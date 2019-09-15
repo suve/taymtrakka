@@ -25,18 +25,17 @@
 #include "os.h"
 #include "wm.h"
 
-#define SLEEP_TIME 5
-#define MAX_SLEEP_TIME (3 * SLEEP_TIME)
+#define MAX_SLEEP_TIME (3 * sleepTime)
 
 static int terminate = 0;
 
-static void taymtrakka_loop(void) {
+static void taymtrakka_loop(unsigned int sleepTime) {
 	int64_t last_windowID = -1;
 	int64_t last_dpID = -1;
 	time_t last_time = time(NULL);
 	
 	while(!terminate) {
-		os_sleep(SLEEP_TIME);
+		os_sleep(sleepTime);
 		time_t now = time(NULL);
 		
 		long long int slept = now - last_time;
@@ -79,7 +78,7 @@ int main(int argc, char **argv) {
 	db_init();
 	httpd_start(opts.portNumber);
 
-	taymtrakka_loop();
+	taymtrakka_loop(opts.updateInterval);
 
 	httpd_stop();
 	db_close();

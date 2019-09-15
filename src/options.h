@@ -19,6 +19,7 @@
 
 struct Options {
 	unsigned int portNumber;
+	unsigned int updateInterval;
 };
 
 extern void options_parse(int argc, char **argv, struct Options *opts);
