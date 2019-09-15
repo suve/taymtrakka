@@ -4,6 +4,7 @@
 *.h.gch
 
 build/
+src/files.c
 src/files/
 src/sql/
 var/

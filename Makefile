@@ -43,8 +43,8 @@ build/taymtrakka: $(OBJECTS)
 	mkdir -p "$(dir $@)"
 	$(CC) $(CFLAGS) -o "$@" $^ $(LDLIBS)
 
-build/db.o: src/db.c src/files/index.c $(SQL_C_FILES)
-build/httpd.o: src/httpd.c $(STATIC_C_FILES)
+build/db.o: src/db.c $(SQL_C_FILES)
+build/httpd.o: src/httpd.c src/files.c $(STATIC_C_FILES)
 build/os.o: src/os.c $(OS_SOURCES)
 build/wm.o: src/wm.c $(WM_SOURCES)
 build/%.o: src/%.c
@@ -55,9 +55,9 @@ src/sql/%.c: sql/%.sql tools/squish-sql.py
 	mkdir -p "$(dir $@)"
 	tools/squish-sql.py < "$<" > "$@"
 
-src/files/index.c: tools/generate-index.py $(STATIC_FILES)
+src/files.c: tools/generate-files-c.py src/files.c.template $(STATIC_FILES)
 	mkdir -p "$(dir $@)"
-	tools/generate-index.py $(STATIC_FILES) > "$@"
+	tools/generate-files-c.py $(STATIC_FILES) --template "src/files.c.template" > "$@"
 
 src/files/%.css.c: files/%.css tools/squish-css.py
 	mkdir -p "$(dir $@)"

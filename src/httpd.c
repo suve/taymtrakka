@@ -23,6 +23,7 @@
 #include <microhttpd.h>
 
 #include "db.h"
+#include "files.h"
 #include "formatstr.h"
 #include "httpd.h"
 #include "utils.h"
@@ -115,14 +116,11 @@ static void buildResponse(char **response_buffer, int *freebuf, size_t *response
 }
 
 static void serveStaticFile(const char *url, char **response_buffer, size_t *response_length, int *response_code) {
-	// Look into the Makefile to find out how the list of url-data pairs is constructed.
-	// Beware, for it is not pretty.
-	char *staticdata;
-	#include "files/index.c"
+	const char *content = files_getContent(url);
 
-	*response_buffer = staticdata;
-	*response_length = (staticdata != NULL) ? strlen(staticdata) : 0;
-	*response_code = (staticdata != NULL) ? 200 : 404;
+	*response_buffer = (char*)content; // Explicitly discard "const"
+	*response_length = (content != NULL) ? strlen(content) : 0;
+	*response_code = (content != NULL) ? 200 : 404;
 }
 
 #define STATICFILES_PREFIX "/files/"
