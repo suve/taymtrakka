@@ -19,6 +19,7 @@
 #include <stdlib.h>
 
 #include "options.h"
+#include "version.h"
 
 
 static void setDefaults(struct Options *opts) {
@@ -28,21 +29,29 @@ static void setDefaults(struct Options *opts) {
 	};
 }
 
-static void print_help(void) {
+static inline void print_help(void) {
 	struct Options opts;
 	setDefaults(&opts);
 	
 	printf(
 		"taymtrakka - a basic time tracking tool\n"
 		"Available command-line options (in alphabetical order):\n"
+		"--help\n"
+		"  Print this help text and exit.\n"
 		"--interval SECONDS\n"
 		"  Specifies the update interval (how often the OS is polled for the\n"
 		"  title of the currently active window). The default value is %d.\n"
 		"--port NUMBER\n"
 		"  Specifies the port number to run the HTTP daemon on.\n"
-		"  The default value is %d.\n",
-		opts.updateInterval, opts.portNumber
+		"  The default value is %d.\n"
+		"--version\n"
+		"  Print version information and exit.\n"
+		, opts.updateInterval, opts.portNumber
 	);
+}
+
+static inline void print_version(void) {
+	puts(APP_NAME " " APP_VERSION_STRING " by " APP_VENDOR);
 }
 
 
@@ -52,13 +61,16 @@ static void print_help(void) {
 
 enum OptionName {
 	OPT_HELP = 1,
+	OPT_VERSION,
+	// ----- //
 	OPT_INTERVAL,
 	OPT_PORT,
 };
 
 static struct option OptionList[] = {
 	{ "help", ARG_NONE, NULL, OPT_HELP },
-	// -----
+	{ "version", ARG_NONE, NULL, OPT_VERSION },
+	// ----- //
 	{ "interval", ARG_REQUIRE, NULL, OPT_INTERVAL },
 	{ "port", ARG_REQUIRE, NULL, OPT_PORT },
 	// -- end
@@ -78,6 +90,10 @@ void options_parse(int argc, char **argv, struct Options *opts) {
 		switch (optionCurrent) {
 			case OPT_HELP:
 				print_help();
+				exit(EXIT_SUCCESS);
+			
+			case OPT_VERSION:
+				print_version();
 				exit(EXIT_SUCCESS);
 			
 			case OPT_INTERVAL:
