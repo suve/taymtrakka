@@ -39,7 +39,7 @@ STATIC_FILES := $(shell ls files/*)
 STATIC_C_FILES := $(STATIC_FILES:files/%=src/files/%.c) 
 
 
-build/taymtrakka: $(OBJECTS)
+build/taymtrakka: build/files.o $(OBJECTS)
 	mkdir -p "$(dir $@)"
 	$(CC) $(CFLAGS) -o "$@" $^ $(LDLIBS)
 
