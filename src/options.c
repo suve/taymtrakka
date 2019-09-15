@@ -15,6 +15,7 @@
  * this program (LICENCE.txt). If not, see <http://www.gnu.org/licenses/>.
  */
 #include <getopt.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "options.h"
@@ -27,19 +28,40 @@ static void setDefaults(struct Options *opts) {
 	};
 }
 
+static void print_help(void) {
+	struct Options opts;
+	setDefaults(&opts);
+	
+	printf(
+		"taymtrakka - a basic time tracking tool\n"
+		"Available command-line options (in alphabetical order):\n"
+		"--interval SECONDS\n"
+		"  Specifies the update interval (how often the OS is polled for the\n"
+		"  title of the currently active window). The default value is %d.\n"
+		"--port NUMBER\n"
+		"  Specifies the port number to run the HTTP daemon on.\n"
+		"  The default value is %d.\n",
+		opts.updateInterval, opts.portNumber
+	);
+}
+
 
 #define ARG_NONE    no_argument
 #define ARG_MAYBE   optional_argument
 #define ARG_REQUIRE required_argument
 
 enum OptionName {
-	OPT_INTERVAL = 1,
+	OPT_HELP = 1,
+	OPT_INTERVAL,
 	OPT_PORT,
 };
 
 static struct option OptionList[] = {
-	{ "interval", ARG_REQUIRE, NULL, OPT_PORT },
+	{ "help", ARG_NONE, NULL, OPT_HELP },
+	// -----
+	{ "interval", ARG_REQUIRE, NULL, OPT_INTERVAL },
 	{ "port", ARG_REQUIRE, NULL, OPT_PORT },
+	// -- end
 	{ 0, 0, 0, 0 },
 };
 
@@ -54,6 +76,10 @@ void options_parse(int argc, char **argv, struct Options *opts) {
 		if(optionCurrent == -1) break;
 
 		switch (optionCurrent) {
+			case OPT_HELP:
+				print_help();
+				exit(EXIT_SUCCESS);
+			
 			case OPT_INTERVAL:
 				opts->updateInterval = atoi(optarg); // TODO: error checking
 			break;
