@@ -54,6 +54,19 @@ static inline void print_version(void) {
 	puts(APP_NAME " " APP_VERSION_STRING " by " APP_VENDOR);
 }
 
+static unsigned int optarg_unsignedInt(const char *optionName, const unsigned int minimum, const unsigned int maximum) {
+	long long int lli = atoll(optarg);
+	if((lli < minimum) || (lli > maximum)) {
+		fprintf(stderr,
+			"ERROR: The argument to %s must be an integer in the %u-%u range (%lli given)\n",
+			optionName, minimum, maximum, lli
+		);
+		exit(EXIT_FAILURE);
+	}
+	
+	return lli;
+}
+
 
 #define ARG_NONE    no_argument
 #define ARG_MAYBE   optional_argument
@@ -97,11 +110,11 @@ void options_parse(int argc, char **argv, struct Options *opts) {
 				exit(EXIT_SUCCESS);
 			
 			case OPT_INTERVAL:
-				opts->updateInterval = atoi(optarg); // TODO: error checking
+				opts->updateInterval = optarg_unsignedInt(argv[optind-2], 1, 60);
 			break;
 			
 			case OPT_PORT:
-				opts->portNumber = atoi(optarg); // TODO: error checking
+				opts->portNumber = optarg_unsignedInt(argv[optind-2], 0, 65535);
 			break;
 		}
 	}
