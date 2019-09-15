@@ -55,7 +55,16 @@ static inline void print_version(void) {
 }
 
 static unsigned int optarg_unsignedInt(const char *optionName, const unsigned int minimum, const unsigned int maximum) {
-	long long int lli = atoll(optarg);
+	char *endptr;
+	long long int lli = strtoll(optarg, &endptr, 10);
+	if((endptr == optarg) || (*endptr != '\0')) {
+		fprintf(stderr,
+			"ERROR: The argument to %s is not a valid integer (\"%s\" given)\n",
+			optionName, optarg
+		);
+		exit(EXIT_FAILURE);
+	}
+	
 	if((lli < minimum) || (lli > maximum)) {
 		fprintf(stderr,
 			"ERROR: The argument to %s must be an integer in the %u-%u range (%lli given)\n",
@@ -114,7 +123,7 @@ void options_parse(int argc, char **argv, struct Options *opts) {
 			break;
 			
 			case OPT_PORT:
-				opts->portNumber = optarg_unsignedInt(argv[optind-2], 0, 65535);
+				opts->portNumber = optarg_unsignedInt(argv[optind-2], 1, 65535);
 			break;
 		}
 	}
