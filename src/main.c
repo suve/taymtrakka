@@ -21,6 +21,7 @@
 
 #include "db.h"
 #include "httpd.h"
+#include "options.h"
 #include "os.h"
 #include "wm.h"
 
@@ -29,13 +30,7 @@
 
 static int terminate = 0;
 
-int main(void) {
-	wm_init();
-	db_open();
-	db_init();
-	httpd_start();
-	os_install_signal_handler(&terminate);
-
+static void taymtrakka_loop(void) {
 	int64_t last_windowID = -1;
 	int64_t last_dpID = -1;
 	time_t last_time = time(NULL);
@@ -71,6 +66,20 @@ int main(void) {
 		last_windowID = windowID;
 		last_time = now;
 	}
+}
+
+int main(int argc, char **argv) {
+	struct Options opts;
+	options_parse(argc, argv, &opts);
+	
+	os_install_signal_handler(&terminate);
+	
+	wm_init();
+	db_open();
+	db_init();
+	httpd_start(opts.portNumber);
+
+	taymtrakka_loop();
 
 	httpd_stop();
 	db_close();

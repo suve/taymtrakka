@@ -14,10 +14,13 @@
  * You should have received a copy of the GNU General Public License along with
  * this program (LICENCE.txt). If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef TAYMTRAKKA_HTTPD_H
-#define TAYMTRAKKA_HTTPD_H
+#ifndef TAYMTRAKKA_OPTIONS_H
+#define TAYMTRAKKA_OPTIONS_H
 
-extern int httpd_start(const unsigned int port);
-extern int httpd_stop(void);
+struct Options {
+	unsigned int portNumber;
+};
+
+extern void options_parse(int argc, char **argv, struct Options *opts);
 
 #endif

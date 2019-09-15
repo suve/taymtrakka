@@ -166,12 +166,12 @@ static int requestHandler(
 	return result;
 }
 
-int httpd_start(void) {
+int httpd_start(const unsigned int port) {
 	if(daemon != NULL) return 0;
 	
 	daemon = MHD_start_daemon(
-		MHD_USE_SELECT_INTERNALLY, 
-		36912, 
+		MHD_USE_DEBUG | MHD_USE_SELECT_INTERNALLY, 
+		port, 
 		NULL, NULL, 
 		&requestHandler, NULL, 
 		MHD_OPTION_CONNECTION_TIMEOUT, 10,
