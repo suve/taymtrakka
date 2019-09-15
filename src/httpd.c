@@ -115,12 +115,13 @@ static void buildResponse(char **response_buffer, int *freebuf, size_t *response
 	}
 }
 
-static void serveStaticFile(const char *url, char **response_buffer, size_t *response_length, int *response_code) {
-	const char *content = files_getContent(url);
+static void serveStaticFile(const char *url, char **response_buffer, size_t *response_length, char **response_mimetype, int *response_code) {
+	struct FileInfo fi = files_get(url);
 
-	*response_buffer = (char*)content; // Explicitly discard "const"
-	*response_length = (content != NULL) ? strlen(content) : 0;
-	*response_code = (content != NULL) ? 200 : 404;
+	*response_buffer = (char*)fi.content; // Explicitly discard "const"
+	*response_length = fi.size;
+	*response_mimetype = (fi.mimetype != NULL) ? (char*)fi.mimetype : "text/html;charset=UTF-8";
+	*response_code = (fi.content != NULL) ? 200 : 404;
 }
 
 #define STATICFILES_PREFIX "/files/"
@@ -143,17 +144,20 @@ static int requestHandler(
 	UNUSED(upload_data_size);
 	
 	char *response_buffer;
+	char *response_mimetype;
 	int freebuf = 0;
 	size_t response_length;
 	int response_code;
 	
-	if(strncmp(url, STATICFILES_PREFIX, STATICFILES_PREFIX_LENGTH) == 0)
-		serveStaticFile(url+STATICFILES_PREFIX_LENGTH, &response_buffer, &response_length, &response_code);
-	else
+	if(strncmp(url, STATICFILES_PREFIX, STATICFILES_PREFIX_LENGTH) == 0) {
+		serveStaticFile(url+STATICFILES_PREFIX_LENGTH, &response_buffer, &response_length, &response_mimetype, &response_code);
+	} else {
 		buildResponse(&response_buffer, &freebuf, &response_length, &response_code);
+		response_mimetype = "text/html;charset=UTF-8";
+	}
 	
 	struct MHD_Response *response = MHD_create_response_from_buffer(response_length, response_buffer, MHD_RESPMEM_MUST_COPY);
-	// MHD_add_response_header(response, "Content-Type", "text/html;charset=UTF-8");
+	MHD_add_response_header(response, "Content-Type", response_mimetype);
 	
 	int result = MHD_queue_response(connection, response_code, response);
 	MHD_destroy_response(response);

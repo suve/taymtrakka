@@ -44,7 +44,7 @@ build/taymtrakka: $(OBJECTS)
 	$(CC) $(CFLAGS) -o "$@" $^ $(LDLIBS)
 
 build/db.o: src/db.c $(SQL_C_FILES)
-build/httpd.o: src/httpd.c src/files.c $(STATIC_C_FILES)
+build/files.o: src/files.c $(STATIC_C_FILES)
 build/os.o: src/os.c $(OS_SOURCES)
 build/wm.o: src/wm.c $(WM_SOURCES)
 build/%.o: src/%.c

@@ -17,6 +17,14 @@
 #ifndef TAYMTRAKKA_FILES_H
 #define TAYMTRAKKA_FILES_H
 
-extern const char* files_getContent(const char *name);
+#include <string.h>
+
+struct FileInfo {
+	size_t size;
+	const char *content;
+	const char *mimetype;
+};
+
+extern struct FileInfo files_get(const char *name);
 
 #endif

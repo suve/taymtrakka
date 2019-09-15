@@ -18,6 +18,7 @@
 #
 
 import argparse
+import mimetypes
 import os
 import sys
 
@@ -48,17 +49,24 @@ def escape_str(string):
 	return string
 
 def genfunc_getContents(filelist):
+	mimetypes.init()
+	
 	func = ""
-	for f in filelist:
-		f = escape_str(os.path.basename(f))
+	for f_raw in filelist:
+		f_raw = os.path.basename(f_raw)
+		f_safe = escape_str(f_raw)
+		
+		mime_type, _ = mimetypes.guess_type(f_raw)
+		mime = (mime_type if mime_type is not None else "application/octet-stream") + ";charset=UTF-8" 
 		
 		func += ( 
-			'\tif(strcmp(name, "' + f + '") == 0) return ""\n'
-			'\t\t#include "files/' + f + '.c"\n'
-			'\t;\n'
+			'\tif(strcmp(name, "' + f_safe + '") == 0) {\n'
+			'\t\tcontent = ""\n'
+			'\t\t\t#include "files/' + f_safe + '.c"\n'
+			'\t\t;\n'
+			'\t\tmimetype = "' + escape_str(mime) + '";\n'
+			'\t}\n'
 		)
-	
-	func += '\n\treturn NULL;'
 	return func
 
 def parse_args():

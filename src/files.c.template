@@ -18,6 +18,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-const char* files_getContent(const char *name) {
+#include "files.h"
+
+struct FileInfo files_get(const char *name) {
+	const char *content = NULL;
+	const char *mimetype = NULL;
+
 «files_getContent()»
+
+	return (struct FileInfo){
+		.size = strlen(content),
+		.content = content,
+		.mimetype = mimetype,
+	};
 }
