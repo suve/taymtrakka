@@ -51,17 +51,15 @@ build/%.o: src/%.c
 	mkdir -p "$(dir $@)"
 	$(CC) $(CFLAGS) -c -o "$@" "$<"
 
-src/sql/%.c: sql/%.sql
+src/sql/%.c: sql/%.sql tools/squish-sql.py
 	mkdir -p "$(dir $@)"
 	tools/squish-sql.py < "$<" > "$@"
 
-src/files/index.c: $(STATIC_FILES)
+src/files/index.c: tools/generate-index.py $(STATIC_FILES)
 	mkdir -p "$(dir $@)"
-	echo -n '' > "$@"
-	for FILE in $(notdir $(STATIC_FILES)); do echo -e -n "if(strcmp(url, \"$$FILE\") == 0) staticdata = \n#include \"files/$$FILE.c\"\n;else " >> "$@"; done
-	echo "staticdata = NULL;" >> "$@"
+	tools/generate-index.py $(STATIC_FILES) > "$@"
 
-src/files/%.css.c: files/%.css
+src/files/%.css.c: files/%.css tools/squish-css.py
 	mkdir -p "$(dir $@)"
 	tools/squish-css.py < "$<" > "$@"
 
